@@ -60,10 +60,17 @@ jobs:
           hdiutil create -volname "Worker" -srcfolder "$APP_PATH" -ov -format UDZO "dist/${DMG_NAME}.dmg"
           ls -la dist/*.dmg
 
+      - name: Collect release files
+        run: |
+          mkdir -p release
+          find dist -name "*.dmg" -type f -exec cp {} release/ \;
+          find dist -name "*.exe" -type f -exec cp {} release/ \;
+          ls -la release/
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         if: success()
         with:
           name: Worker-macos
-          path: dist/
+          path: release/
           retention-days: 7
