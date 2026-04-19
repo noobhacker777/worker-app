@@ -51,3 +51,16 @@ exe = EXE(
     entitlements_file=None,
     icon=['F_icon.ico'],
 )
+
+if platform.system() == 'Darwin':
+    app = BUNDLE(
+        exe,
+        name='Worker.app',
+        icon='F_icon.ico',
+        bundle_identifier='com.worker.app',
+        info_plist={
+            'CFBundleName': 'Worker Activity Tracker',
+            'CFBundleDisplayName': 'Worker Activity Tracker',
+            'NSHighResolutionCapable': True,
+        },
+    )

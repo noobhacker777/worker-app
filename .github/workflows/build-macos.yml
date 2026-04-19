@@ -33,38 +33,34 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller pillow pystray python-dotenv requests mss || true
-          pip install pyinstaller pillow pystray python-dotenv requests mss 2>&1 | tail -5
+          pip install py2app pillow pystray python-dotenv requests mss || true
+          pip install py2app pillow pystray python-dotenv requests mss 2>&1 | tail -5
 
-      - name: Install PyInstaller
-        run: pip install pyinstaller
-
-      - name: Verify spec file exists
-        run: test -f Worker.spec && echo "Worker.spec found" || (echo "Worker.spec not found, creating minimal one" && exit 1)
-
-      - name: Run PyInstaller
+      - name: Build .app with py2app
         run: |
-          pyinstaller Worker.spec --noconfirm --log-level=INFO 2>&1 | tail -20
+          python setup.py py2app
+          ls -la dist/*.app 2>&1 || echo "Build may have failed"
 
       - name: Verify build output
         run: |
           ls -la dist/ 2>&1 || echo "dist/ not found"
-          ls -la dist/Worker.app 2>&1 || echo "Worker.app not found"
+          find dist -name "*.app" -type d 2>&1 || echo "No .app found"
 
-      - name: Upload dist artifact
+      - name: Create DMG
+        run: |
+          APP_PATH=$(find dist -name "*.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "No .app found"
+            exit 1
+          fi
+          DMG_NAME="Worker-$(date +%Y%m%d)"
+          hdiutil create -volname "Worker" -srcfolder "$APP_PATH" -ov -format UDZO "dist/${DMG_NAME}.dmg"
+          ls -la dist/*.dmg
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         if: success()
         with:
           name: Worker-macos
           path: dist/
-          retention-days: 7
-
-      - name: Upload logs on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-logs
-          path: |
-            build/*.log
-            *.spec
           retention-days: 7
