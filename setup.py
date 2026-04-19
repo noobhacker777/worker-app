@@ -7,7 +7,7 @@ OPTIONS = {
         "argv_emulation": True,
         "plist": {
             "CFBundleName": "Worker",
-            "CFBundleDisplayName": "Worker Activity Tracker",
+            "CFBundleDisplayName": "Worker",
             "CFBundleIdentifier": "com.worker.app",
             "NSHighResolutionCapable": True,
         },
