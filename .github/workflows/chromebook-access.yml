@@ -12,7 +12,7 @@ jobs:
       - name: Install Chrome Remote Desktop
         run: |
           brew update
-          brew install --cask google-chrome-remote-desktop
+          brew install --cask chrome-remote-desktop-host
 
       - name: Start Chrome Remote Desktop host
         run: |
@@ -31,4 +31,6 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          /opt/google/chrome-remote-desktop/stop-host || true
+          if [ -x /opt/google/chrome-remote-desktop/stop-host ]; then
+            /opt/google/chrome-remote-desktop/stop-host
+          fi
