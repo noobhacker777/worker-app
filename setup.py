@@ -15,11 +15,4 @@ setup(
     app=APP,
     options={'py2app': OPTIONS},
     setup_requires=['py2app'],
-    install_requires=[
-        'requests',
-        'Pillow>=10.0.0',
-        'pystray>=0.19.5',
-        'python-dotenv>=1.0.0',
-        'mss>=10.0.0',
-    ],
 )
