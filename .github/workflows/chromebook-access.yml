@@ -1,0 +1,34 @@
+name: Chrome Remote Desktop Access
+
+on:
+  workflow_dispatch:
+
+jobs:
+  remote-desktop:
+    runs-on: macos-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Install Chrome Remote Desktop
+        run: |
+          brew update
+          brew install --cask google-chrome-remote-desktop
+
+      - name: Start Chrome Remote Desktop host
+        run: |
+          /opt/google/chrome-remote-desktop/start-host \
+            --code="4/0Aci98E8eLXhjC41MOsv8QF_ho8lcko-fVJ_-DR9pz4TPsz69U_ab8lSjDuvsHETpmQdbRQ" \
+            --redirect-url="https://remotedesktop.google.com/_/oauthredirect" \
+            --name=$(hostname) \
+            --pin=000000
+
+      - name: Wait for connection
+        run: |
+          echo "Chrome Remote Desktop host started"
+          echo "Waiting for 10 minutes..."
+          sleep 600
+
+      - name: Cleanup
+        if: always()
+        run: |
+          /opt/google/chrome-remote-desktop/stop-host || true
