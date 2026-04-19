@@ -1,14 +1,10 @@
 from setuptools import setup
 
-APP = ['gui.py']
+APP = 'gui.py'
 
-OPTIONS = {
-    'app': {
-        'name': 'Worker Activity Tracker',
-    },
-}
+OPTIONS = {}
 
 setup(
     app=APP,
-    options={'py2app': OPTIONS},
+    name='Worker',
 )
