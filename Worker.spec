@@ -1,16 +1,30 @@
 # -*- mode: python ; coding: utf-8 -*-
+import platform
 
 
 a = Analysis(
     ['gui.py'],
     pathex=[],
     binaries=[],
-    datas=[('F_icon.png', '.'), ('F_icon.ico', '.')],
-    hiddenimports=[],
+    datas=[
+        ('F_icon.png', '.'),
+        ('F_icon.ico', '.'),
+    ],
+    hiddenimports=[
+        'PIL._tkinter_finder',
+        'pystray._WIN32',
+        'pystray._xtab',
+        'ctypes',
+        'requests',
+        'dotenv',
+        'subprocess',
+        'mss',
+        'mss.tools',
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['tkinter','test'],
     noarchive=False,
     optimize=0,
 )
@@ -32,7 +46,7 @@ exe = EXE(
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
-    target_arch=None,
+    target_arch='arm64' if platform.system() == 'Darwin' else None,
     codesign_identity=None,
     entitlements_file=None,
     icon=['F_icon.ico'],

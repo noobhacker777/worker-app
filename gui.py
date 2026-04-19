@@ -8,7 +8,19 @@ import tempfile
 import time
 from io import BytesIO
 from datetime import datetime, timezone, timedelta
-from PIL import Image, ImageGrab, ImageTk
+from PIL import Image, ImageTk
+
+try:
+    from PIL import ImageGrab
+except ImportError:
+    ImageGrab = None
+
+SCREENSHOT_AVAILABLE = True
+try:
+    import mss
+    import mss.tools
+except ImportError:
+    mss = None
 import threading
 import os
 import json
@@ -24,6 +36,27 @@ from dotenv import load_dotenv
 def local_now():
     """Return current local datetime"""
     return datetime.now()
+
+
+def _capture_screenshot():
+    """Capture screenshot cross-platform (Windows/macOS/Linux)."""
+    if ImageGrab is not None and sys.platform.startswith("win"):
+        try:
+            return ImageGrab.grab()
+        except Exception:
+            pass
+
+    if mss is not None:
+        try:
+            with mss.mss() as sct:
+                monitor = sct.monitors[0]
+                sct_img = sct.grab(monitor)
+                return Image.frombytes("RGBA", sct_img.size, sct_img.rgba)
+        except Exception:
+            pass
+
+    print("[Screenshot] Capture not available on this platform")
+    return None
 
 
 try:
@@ -2385,7 +2418,15 @@ class WorkerApp:
         if not self.worker_id or not self.work_session_id:
             return
 
-        screenshot = self._apply_watermark(ImageGrab.grab())
+        if not (ImageGrab or mss):
+            print("[Screenshot] Not available - skipping capture")
+            return
+
+        screenshot = _capture_screenshot()
+        if screenshot is None:
+            print("[Screenshot] Capture failed - skipping upload")
+            return
+
         capture_timestamp = local_now()
 
         # Track last screenshot timestamp for auto checkout
@@ -2607,7 +2648,9 @@ class WorkerApp:
                 time.sleep(1)
                 continue
             try:
-                screenshot = ImageGrab.grab()
+                screenshot = _capture_screenshot()
+                if screenshot is None:
+                    continue
                 screenshot = self._apply_watermark(screenshot)
                 self._push_live_stream_frame(screenshot)
             except Exception as e:

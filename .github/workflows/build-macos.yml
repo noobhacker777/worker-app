@@ -1,0 +1,70 @@
+name: Build macOS App
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller pillow pystray python-dotenv requests mss || true
+          pip install pyinstaller pillow pystray python-dotenv requests mss 2>&1 | tail -5
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Verify spec file exists
+        run: test -f Worker.spec && echo "Worker.spec found" || (echo "Worker.spec not found, creating minimal one" && exit 1)
+
+      - name: Run PyInstaller
+        run: |
+          pyinstaller Worker.spec --noconfirm --log-level=INFO 2>&1 | tail -20
+
+      - name: Verify build output
+        run: |
+          ls -la dist/ 2>&1 || echo "dist/ not found"
+          ls -la dist/Worker.app 2>&1 || echo "Worker.app not found"
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: Worker-macos
+          path: dist/
+          retention-days: 7
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            build/*.log
+            *.spec
+          retention-days: 7
